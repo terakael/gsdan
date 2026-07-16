@@ -10,11 +10,11 @@
 # automated and do not need human interaction.
 #
 # Run from the repo root in a dedicated tmux window:
-#   bash dan/skills/implement/implement.sh
+#   bash .pi/skills/implement/implement.sh
 #
 # Override defaults via env:
-#   MAX_ITERATIONS=30 bash dan/skills/implement/implement.sh
-#   FLOW_DIR=my-flow  bash dan/skills/implement/implement.sh
+#   MAX_ITERATIONS=30 bash .pi/skills/implement/implement.sh
+#   FLOW_DIR=my-flow  bash .pi/skills/implement/implement.sh
 
 set -uo pipefail
 

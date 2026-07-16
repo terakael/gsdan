@@ -39,6 +39,12 @@ const SPEC_RE = new RegExp(`(^|/)${rx(FLOW_DIR)}/milestone-spec\\.md$`);
 const ADR_IN_CMD = new RegExp(`${rx(FLOW_DIR)}/adr/[^/\\s]+\\.md`);
 const SPEC_IN_CMD = new RegExp(`${rx(FLOW_DIR)}/milestone-spec\\.md`);
 
+// A redirect (`>` / `>>`) whose target is the gated path. `\S*` absorbs any
+// prefix like `./`, but a redirect to something else (e.g. `2>/dev/null`) does
+// not match because /dev/null isn't the gated path.
+const ADR_REDIRECT = new RegExp(`>>?\s*\S*${rx(FLOW_DIR)}/adr/[^/\s]+\.md`);
+const SPEC_REDIRECT = new RegExp(`>>?\s*\S*${rx(FLOW_DIR)}/milestone-spec\.md`);
+
 type Kind = "adr" | "spec" | null;
 
 function classify(path: string): Kind {
@@ -52,10 +58,13 @@ function classify(path: string): Kind {
 // (redirections, tee, cp, mv, sed -i). The agent normally uses the write/edit
 // tools; this catches the obvious `cat > .flow/adr/...` style side-doors.
 function classifyBash(command: string): Kind {
-  if (SPEC_IN_CMD.test(command)) return "spec";
-  if (ADR_IN_CMD.test(command)) {
-    if (/>>?|(^|\s)(tee|cp|mv|sed)\b/.test(command)) return "adr";
-  }
+  // A gated path only matters if the command WRITES to it: a redirect whose
+  // target is the path, or a mutating command (tee/cp/mv/sed) touching it.
+  const mutates = /(^|\s)(tee|cp|mv|sed)\b/.test(command);
+  if (SPEC_REDIRECT.test(command) || (mutates && SPEC_IN_CMD.test(command)))
+    return "spec";
+  if (ADR_REDIRECT.test(command) || (mutates && ADR_IN_CMD.test(command)))
+    return "adr";
   return null;
 }
 

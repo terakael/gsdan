@@ -1,12 +1,13 @@
 ---
 name: phase-reorient
-description: "End-of-phase step: check for cross-task integration gaps, reshape downstream phases in milestone-spec.md, and finalise the phase. Re-entrant - adds fix-up tickets for done-definition gaps and exits without marking done; the loop continues until a clean run."
+description: "End-of-phase step: check for cross-task integration gaps, sweep for deep-module leaks that accumulated across tasks, reshape downstream phases in milestone-spec.md, and finalise the phase. Re-entrant - adds fix-up tickets for done-definition gaps and Strong architecture drift, then exits without marking done; the loop continues until a clean run."
 ---
 
 Run when the ticket frontier is empty - every ticket has a done-summary. You have the
 holistic view no single task-reorient could have: all task findings at once. Use it to
-check for cross-task integration gaps, harvest phase-level decisions, and reshape
-downstream phases. Then, when clean, finalise the phase.
+check for cross-task integration gaps, sweep for deep-module leaks that accumulated one
+ticket at a time (which no per-ticket diff review can see), harvest phase-level
+decisions, and reshape downstream phases. Then, when clean, finalise the phase.
 
 This skill is re-entrant. If you find a gap that breaks the phase's done-definition, add
 a fix-up ticket and stop WITHOUT marking the phase done. The implement loop re-globs,
@@ -86,7 +87,44 @@ If `milestone-spec.md` has typed zone fields, look across all summaries for phas
 
 No typed zone fields → skip.
 
-### 4. Reshape downstream phases
+### 4. Deepening sweep
+
+A per-ticket diff review is blind to smells that accumulate one commit at a time: a
+match that grew an arm per ticket, an interface that widened as variants piled up, a
+leak that only shows once the whole shape is in view. This is the one moment with that
+whole shape in view, so look at it.
+
+Run `/scan-codebase-architecture` scoped to the code this phase touched. It reads the
+spine, CONTEXT, and ADRs first, so it won't re-flag deliberate stubs or spine seams -
+and it returns a list of findings.
+
+Route each finding (do not act on anything the scan already dropped):
+
+- **Spec/ADR conflict flagged** → drop it. If the intent exists in the spine but isn't
+  yet a formal ADR, note in `phase-reorient-summary.md` that the next `phase-grilling`
+  should record a ratifying ADR - that's enough to prevent future sweeps re-flagging it.
+  Don't author a judgment-call ADR here - this step is headless and can't ask Dan.
+  (A ratifying ADR for a decision the spine already made is fine to write; a new
+  judgment call is not.)
+
+- **`Strong` + drift-from-vision `yes` + one-ticket-sized `yes`** → the code has drifted
+  from where the spine's seam goes, and a single ticket pulls it back. Add a fix-up
+  ticket to `.flow/phases/<phase>/tickets/` (full ticket format, correct blocking edges)
+  and **stop without marking the phase done** - same re-entrant path as a done-definition
+  gap. Leave milestone-spec.md and STATE.md untouched. The loop re-globs, implements the
+  fix-up, and invokes you again. This is allowed because it adds a ticket to the current
+  phase without changing the phase's destination.
+
+- **Everything else** (`Worth exploring`, `Speculative`, `drift-from-vision: no`, or
+  larger than one ticket) → record as a downstream stub in milestone-spec.md or a note
+  in CONTEXT.md. Does not block the phase. The human schedules it.
+
+The bar for a fix-up ticket is tight on purpose: only concrete drift-from-vision leaks
+that pass the deletion test and fit one ticket. Net-new deepening ideas never become
+fix-up tickets - that's how this stays terminating. Fix the drift, the next sweep is
+clean, the phase closes.
+
+### 5. Reshape downstream phases
 
 Based on what the whole phase taught you, adjust the downstream phase stubs in
 milestone-spec.md. Same discipline as task-reorient, one level up: concrete outcome,
@@ -103,9 +141,10 @@ reached. Keep the destination map honest.
 Leave the completed phase's stub and phase-spec.md in place. Task-reorient kept them
 current; your view here is forward only.
 
-### 5. Status transition (clean run only)
+### 6. Status transition (clean run only)
 
-Only reach this step if step 2 found no done-definition gaps.
+Only reach this step if step 2 found no done-definition gaps and step 4 added no fix-up
+ticket.
 
 **a.** Mark the current phase `done` in the milestone-spec.md phase list.
 
@@ -139,7 +178,7 @@ Write STATE.md last, after milestone-spec.md is updated.
 run: clean | fixup
 
 ## What was found
-<one paragraph: cross-task gaps or decisions harvested, or "no gaps found">
+<one paragraph: cross-task gaps, deepening-sweep findings, or decisions harvested, or "no gaps found">
 
 ## Actions taken
 <bullet list of files written and why>
@@ -153,7 +192,8 @@ This file is the only durable record of the run — write it even if nothing cha
 ## Reads / Writes
 
 **Reads:** STATE.md, all task summaries, phase-spec.md, milestone-spec.md, CONTEXT.md,
-relevant ADRs.
+relevant ADRs. Invokes `/scan-codebase-architecture` (which reads the code this phase
+touched plus the spine/CONTEXT/ADRs as guardrails).
 
 **Writes (clean run - no gaps):**
 
@@ -164,11 +204,12 @@ relevant ADRs.
 | `.flow/milestone-spec.md` | Phase status transitions + downstream stub changes |
 | `.flow/STATE.md` | Written last |
 
-**Writes (fix-up path - gap broke done-definition):**
+**Writes (fix-up path - gap broke done-definition, or a Strong drift-from-vision finding
+from the deepening sweep):**
 
 | File | Notes |
 |---|---|
-| `.flow/phases/<phase>/tickets/NN-<slug>.md` | Fix-up tickets only |
+| `.flow/phases/<phase>/tickets/NN-<slug>.md` | Fix-up tickets only (integration gap or architecture drift) |
 | `.flow/CONTEXT.md` | If step 1 harvested anything |
 
 On the fix-up path, STATE.md and milestone-spec.md are untouched. The loop reads the

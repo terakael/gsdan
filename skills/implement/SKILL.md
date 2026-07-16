@@ -17,7 +17,7 @@ Run `phase-grilling` first if these aren't in place.
 
 ## What it does
 
-Runs `dan/skills/implement/implement.sh` from the repo root. For each ticket:
+Runs `.pi/skills/implement/implement.sh` from the repo root. For each ticket:
 
 1. Finds the next runnable ticket (no done-summary, all blocking edges done).
 2. Launches an **interactive pi session in a new tmux window** for that ticket.
@@ -56,7 +56,7 @@ The skill launches `implement.sh` in a **detached tmux window** so this pi sessi
 stays free. When invoked, the model runs:
 
 ```bash
-tmux new-window -d -n flow-loop "bash $(git rev-parse --show-toplevel)/dan/skills/implement/implement.sh"
+tmux new-window -d -n flow-loop "bash $(git rev-parse --show-toplevel)/.pi/skills/implement/implement.sh"
 ```
 
 The window is named `flow-loop`. Switch to it with `Ctrl-b w` or
