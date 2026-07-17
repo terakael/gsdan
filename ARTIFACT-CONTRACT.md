@@ -150,6 +150,30 @@ Contents:
 - **Requirements coverage** against the destination.
 - **Gap list** and overall status.
 
+## AGENTS.md files
+
+The durable-why layer. AGENTS.md files live in the codebase itself, next to the code they document — not under `.flow/`. They are spatial: anchored to directories, outliving any single milestone.
+
+**The sharp rule:** if a fact answers "what are we building / is it done", it belongs in `.flow/`. If it answers "why is this code shaped this way", it belongs in `AGENTS.md`.
+
+`.flow/` is temporal — organized by the delivery loop, goes stale once a milestone ships. AGENTS.md files outlive the plan and accumulate across milestones.
+
+**Two kinds of why:**
+- **Intent-why** — why this seam exists, what it must never do. Known before coding, from the ticket and grilling artifacts. Written during the red step alongside the failing tests.
+- **Discovered-why** — rationale only visible after writing code: constraints hit, approach chosen over a failed alternative. Appended during the drive to green.
+
+**Layered contract:** every AGENTS.md covers only its own directory layer. An agent working anywhere loads the full ancestor chain and gets complete, non-redundant context. Anything already in a parent AGENTS.md is not repeated; anything specific to one child goes in that child, not the parent.
+
+**Lifecycle:** AGENTS.md is staged and uncommitted during the red/green cycle, then committed together with the code and tests in the one commit when the ticket goes green. Spec and code are one artifact.
+
+**Who writes it:**
+- The implementer writes and updates leaf-level AGENTS.md for touched directories (red through green).
+- `phase-reorient` curates the higher layers (module / directory-type) once the phase's full shape is visible.
+- `task-reorient` does a light sweep after each ticket to confirm leaf AGENTS.md landed.
+- `milestone-audit` checks the whole ancestor chain for coherence and non-redundancy across the tree.
+
+See `AGENTS-WRITING-STANDARDS.md` for format rules, layer specificity filters, and the redundancy discipline.
+
 ## Who touches what
 
 | Artifact | Written by | Read by |
@@ -162,6 +186,8 @@ Contents:
 | `tickets/*` | `phase-grilling`, `task-reorient`, `phase-reorient` (fix-up), escalation | the implementer working it |
 | `summaries/*` | the implementer | next iteration, re-orient steps |
 | `milestone-audit.md` | `milestone-audit` | human, then `milestone-spec.md` |
+| `AGENTS.md` (leaf) | implementer | implementer (next task), engineers |
+| `AGENTS.md` (higher layers) | `phase-reorient` | engineers, implementers in that area |
 
 ## An implementer's assembled context
 
@@ -173,5 +199,6 @@ When the ralph loop spins up a fresh instance for one ticket, that instance's co
 - relevant `adr/*` — the hard decisions in its area
 - its own `tickets/<slug>.md` — the task: what to build, which interface it builds behind, acceptance criteria, blocking edges, constraints
 - its own `summaries/<slug>.md` if a prior attempt exists — what already failed
+- the ancestor chain of `AGENTS.md` for its target directory — durable why for this scope
 
 Nothing else. No live oracle. If the docs don't answer a question the agent needs, that's a gap the agent escalates — and the answer gets harvested back into these files so the next fresh agent inherits it.

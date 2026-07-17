@@ -124,7 +124,28 @@ that pass the deletion test and fit one ticket. Net-new deepening ideas never be
 fix-up tickets - that's how this stays terminating. Fix the drift, the next sweep is
 clean, the phase closes.
 
-### 5. Reshape downstream phases
+### 5. Curate higher-layer AGENTS.md
+
+With the full phase in view, curate the AGENTS.md files at higher layers (module /
+directory-type level) for the directories this phase touched. These layers capture why
+that only emerges from the full-phase shape — patterns that crystallised across tasks,
+seam rationale visible only once all the pieces are together.
+
+For each module or component directory that had multiple tasks touching it:
+
+1. Load the ancestor chain for that directory.
+2. Run `/write-agents` at the module or component level, sourcing from all task
+   summaries and the phase-reorient findings, not just one ticket.
+3. Enforce non-redundancy in both directions: pull shared why up to the appropriate
+   layer; push sibling-specific content down to the child that owns it.
+4. Confirm no content duplicates what already exists in ancestor or descendant files.
+
+This step is mechanical layer-specificity work — not a judgment call. It runs headless
+without human input. If a decision at this layer requires human sign-off (a new interface
+decision, not documentation of an existing one), that's an escalation for the next phase
+grilling, not something to record here.
+
+### 6. Reshape downstream phases
 
 Based on what the whole phase taught you, adjust the downstream phase stubs in
 milestone-spec.md. Same discipline as task-reorient, one level up: concrete outcome,
@@ -141,7 +162,7 @@ reached. Keep the destination map honest.
 Leave the completed phase's stub and phase-spec.md in place. Task-reorient kept them
 current; your view here is forward only.
 
-### 6. Status transition (clean run only)
+### 7. Status transition (clean run only)
 
 Only reach this step if step 2 found no done-definition gaps and step 4 added no fix-up
 ticket.
@@ -193,7 +214,8 @@ This file is the only durable record of the run — write it even if nothing cha
 
 **Reads:** STATE.md, all task summaries, phase-spec.md, milestone-spec.md, CONTEXT.md,
 relevant ADRs. Invokes `/scan-codebase-architecture` (which reads the code this phase
-touched plus the spine/CONTEXT/ADRs as guardrails).
+touched plus the spine/CONTEXT/ADRs as guardrails). Invokes `/write-agents` for
+higher-layer curation.
 
 **Writes (clean run - no gaps):**
 
@@ -202,6 +224,7 @@ touched plus the spine/CONTEXT/ADRs as guardrails).
 | `.flow/CONTEXT.md` | Cross-task decisions via `/domain-modeling` |
 | `.flow/adr/NNNN-<slug>.md` | If cross-task decisions meet ADR criteria |
 | `.flow/milestone-spec.md` | Phase status transitions + downstream stub changes |
+| `AGENTS.md` (higher layers) | Via `/write-agents` — module/component level curation |
 | `.flow/STATE.md` | Written last |
 
 **Writes (fix-up path - gap broke done-definition, or a Strong drift-from-vision finding

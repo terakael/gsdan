@@ -42,7 +42,22 @@ Read the done-summary's "Key decisions" section. For each decision:
 
 Keep this tight. Most decisions will already be captured - the escalation mechanic in implement ensures it. This is just the closing sweep.
 
-### 3. Reshape remaining work
+### 3. Check AGENTS.md coverage
+
+Read the done-summary's "Files touched" section. For each directory listed:
+
+- Does a leaf `AGENTS.md` exist there? If not, and the directory contains new or
+  significantly changed code, that's a gap — run `/write-agents` for that directory
+  using the done-summary and ticket as the primary artifacts.
+- If an AGENTS.md exists, does it reflect what actually landed? A thin or missing
+  discovered-why section after a non-trivial implementation is a gap — run
+  `/write-agents` to fill it.
+
+This is a sweep, not a rewrite. Most of the time AGENTS.md will have been written by
+the implementer during the red/green cycle. The common case here is a quick check that
+it landed and is not obviously stale.
+
+### 4. Reshape remaining work
 
 Find all tickets in the phase without a done-summary. If there are none (the last ticket just completed), skip this step.
 
@@ -72,9 +87,7 @@ invalidate a remaining ticket's acceptance criteria, blocking edges, or scope. A
 possible sequencing, a cleanup opportunity, a speculative dependency - none of these
 clear that bar. Phase goal, premise, and downstream phases belong to phase-reorient.
 
-### 4. Drift check [If milestone-spec has typed zone fields]
-
-If `milestone-spec.md` has typed zone fields (establishing-path milestone), check:
+### 5. Drift check [If milestone-spec has typed zone fields]
 
 - Did the summary correctly restate zone, allowed deps, forbidden move?
 - Pure boundary attestation clean? `no` or missing on a port/shell task = missed escalation.
@@ -86,7 +99,7 @@ Fail → update CONTEXT.md or ADR. Serious enough to reshape tickets → apply s
 
 No typed zone fields → skip.
 
-### 5. Update STATE.md
+### 6. Update STATE.md
 
 Compute the next runnable ticket using the frontier rule from ARTIFACT-CONTRACT.md: runnable = no done-summary AND all blocking-edge slugs have done-summaries; pick the lowest-prefix one.
 
@@ -114,6 +127,7 @@ When you write `current_task: none`, the loop re-globs on its next iteration, fi
 | `.flow/adr/NNNN-<slug>.md` | If a decision meets ADR criteria |
 | `.flow/phases/<phase>/tickets/*.md` | Only when a rewrite trigger fires |
 | `.flow/phases/<phase>/phase-spec.md` | Only when concrete findings change how remaining work gets done |
+| `AGENTS.md` (leaf) | If the AGENTS coverage sweep finds a gap |
 | `.flow/STATE.md` | Always — `current_task` advanced |
 
 Stop at the phase boundary: milestone-spec.md and the phase goal are phase-reorient's territory.

@@ -196,7 +196,7 @@ run_ticket_iter() {
 #!/usr/bin/env bash
 export FLOW_SUMMARY_FILE="$summary_file"
 export FLOW_DIR="$FLOW_DIR"
-exec pi -e "$SKILL_DIR/auto-exit.ts" -e "$SKILL_DIR/interface-gate.ts" --approve --no-session @"$prompt_file"
+exec pi -e "$SKILL_DIR/auto-exit.ts" -e "$SKILL_DIR/interface-gate.ts" -e "$SKILL_DIR/agents-doc-gate.ts" --approve --no-session @"$prompt_file"
 LAUNCHER
   chmod +x "$launcher"
 

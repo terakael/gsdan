@@ -58,6 +58,20 @@ What survives an escalation: already-committed tasks stay (they're green and com
 
 The reference ralph loop's `max_iterations` cap naturally stops a task that keeps escalating without resolving.
 
+## The durable-docs layer
+
+Two documentation axes run through the loop, and they answer different questions.
+
+`.flow/` holds **intent and status** - what we're building and whether it's done. It's temporal: organized by the delivery loop, goes stale once a milestone ships. Every fresh implementer reads it to assemble context. Every re-orient step writes back into it.
+
+`AGENTS.md` files hold **durable why**, anchored to code location. They're spatial: next to the code in the actual codebase, not under `.flow/`. They outlive any single milestone. A layered hierarchy - an agent working in any directory loads the full ancestor chain of AGENTS.md files and gets complete, non-redundant context for that scope without reading the entire phase spec.
+
+The sharp rule: **if a fact answers "what are we building / is it done", it belongs in `.flow/`. If it answers "why is this code shaped this way", it belongs in `AGENTS.md`.**
+
+The two kinds of why map onto the red/green cycle. Intent-why (why the seam exists, what it must never do) is known from the ticket and grilling before any code is written - it goes into AGENTS.md alongside the failing tests. Discovered-why (constraints hit, approach chosen over an alternative that failed) only exists after writing code - it gets appended during the drive to green. Both ship in the same commit as the code.
+
+This threads through every skill in the loop: the implementer reads the AGENTS ancestor chain when orienting and writes leaf-level AGENTS.md across red and green; task-reorient does a light sweep to confirm coverage landed; phase-reorient curates the higher layers once the full phase shape is visible; milestone-audit checks the chain is coherent across the tree. See `ARTIFACT-CONTRACT.md` for ownership details and `AGENTS-WRITING-STANDARDS.md` for the writing rules.
+
 ## The on-disk artifact contract
 
 This is the heart of the design. Every skill reads and writes these files; a fresh implementer agent gets everything it needs here and never talks to a live oracle. **`dan/ARTIFACT-CONTRACT.md` is the source of truth for paths, file structure, ownership, and lifecycle** - the summary below is orientation only.
@@ -104,28 +118,28 @@ Six skills, one per step, each a `SKILL.md` in `dan/`, each independently delega
 ### 3. `implement` (the ralph loop)
 
 - **Form:** a bash script (`implement.sh` or similar) that loops, spinning up a fresh `pi` instance per iteration against one ticket. Modelled on the reference ralph loop but adjusted: fresh context each pass (no context rot), context assembled from the on-disk artifacts, TDD to green, commit only on success.
-- **Each iteration does:** read assembled context (milestone spec, phase spec, `CONTEXT.md`, relevant ADRs, ticket, prior summary if any) → drive `/tdd` one red-green slice at a time → build the minimal slice but **place seams to match the milestone-spec vision** → on green, run `/code-review`, then commit and write a success `summaries/` entry → on failure, write a `summaries/` entry recording what was tried and why it failed (so the next iteration takes a different path), no commit.
+- **Each iteration does:** read assembled context (milestone spec, phase spec, `CONTEXT.md`, relevant ADRs, ticket, prior summary if any, **plus the AGENTS.md ancestor chain for the ticket's target directories**) → during red, write the intent-why into AGENTS.md for touched directories (via `/write-agents`) alongside the failing tests → drive `/tdd` one red-green slice at a time, appending discovered-why to AGENTS.md as decisions get made → on green, run `/code-review` with a fidelity review (checks AGENTS content against code), then commit tests + code + AGENTS.md together and write a success `summaries/` entry → on failure, write a `summaries/` entry recording what was tried and why it failed, no commit.
 - **Escalation:** if the agent hits a wall it can't resolve alone - an **interface-level decision** that would change a module interface in `milestone-spec.md`, or a discovery that the **phase premise itself is wrong** - it stops implementing and runs `phase-grilling` inline (see "Escalation" above). It does not resolve these silently. After the grilling updates the artifacts on disk, the instance exits without committing and the loop resumes with a fresh instance against the revised tickets.
 - **Reuses:** `/tdd`, `/code-review`, `/codebase-design` (for seam placement vocabulary).
 
 ### 4. `task-reorient` (lightweight)
 
 - **Reads:** the just-completed task's `summaries/` entry, `phase-spec.md`, remaining `tickets/`.
-- **Does:** harvests any decisions made mid-implementation into `CONTEXT.md` / ADRs (mostly these already exist from the escalation step, so this is a sweep, not new thinking). Checks whether the remaining tickets in this phase are still right; splits/reorders/reframes as needed. Stays lightweight by default - the blast radius is just the rest of the phase. A phase-breaking discovery is handled earlier and inline via escalation (see "Escalation"), not deferred to here.
-- **Writes:** updates to `tickets/`, `CONTEXT.md`, possibly `phase-spec.md`.
-- **Reuses:** `/domain-modeling` (glossary / ADR harvesting).
+- **Does:** harvests any decisions made mid-implementation into `CONTEXT.md` / ADRs (mostly these already exist from the escalation step, so this is a sweep, not new thinking). Checks whether the remaining tickets in this phase are still right; splits/reorders/reframes as needed. Does a light AGENTS.md sweep: confirms leaf AGENTS.md landed for touched directories and harvests any missed local why. Stays lightweight by default - the blast radius is just the rest of the phase.
+- **Writes:** updates to `tickets/`, `CONTEXT.md`, possibly `phase-spec.md`, leaf `AGENTS.md` if anything was missed.
+- **Reuses:** `/domain-modeling` (glossary / ADR harvesting), `/write-agents` (if the sweep finds a gap).
 
 ### 5. `phase-reorient`
 
 - **Reads:** all of this phase's `summaries/`, `phase-spec.md`, `milestone-spec.md`, downstream phase stubs.
-- **Does:** looks at what the whole phase taught us and adjusts the downstream phases in `milestone-spec.md` - add, remove, or modify stubs to stay in sync with the destination. Harvests durable rules into `CONTEXT.md` / ADRs.
-- **Writes:** updates to `milestone-spec.md` phase stubs, `CONTEXT.md`, ADRs.
-- **Reuses:** `/domain-modeling` (glossary / ADR harvesting).
+- **Does:** looks at what the whole phase taught us and adjusts the downstream phases in `milestone-spec.md` - add, remove, or modify stubs to stay in sync with the destination. Harvests durable rules into `CONTEXT.md` / ADRs. Curates the higher-layer AGENTS.md files (module / directory-type level) using `/write-agents` - pulls up why that is shared across tasks, pushes sibling-specific content down, enforces non-redundancy between layers.
+- **Writes:** updates to `milestone-spec.md` phase stubs, `CONTEXT.md`, ADRs, higher-layer `AGENTS.md` files.
+- **Reuses:** `/domain-modeling` (glossary / ADR harvesting), `/write-agents` (higher-layer curation).
 
 ### 6. `milestone-audit`
 
 - **Reads:** `milestone-spec.md`, all phases' specs and summaries.
-- **Does:** checks the **seams between phases** - integration across the whole milestone, which no per-phase re-orient can see (each phase can be green while the joins don't line up). Checks requirements coverage against the destination. If gaps are found, restarts the loop with new phases (or a focused gap-closure phase) to close them, then re-audits. When clean, ships (commit/tag).
+- **Does:** checks the **seams between phases** - integration across the whole milestone, which no per-phase re-orient can see (each phase can be green while the joins don't line up). Checks requirements coverage against the destination. Checks the whole AGENTS.md ancestor chain is coherent and non-redundant across the tree. If gaps are found, restarts the loop with new phases (or a focused gap-closure phase) to close them, then re-audits. When clean, ships (commit/tag).
 - **Writes:** `milestone-audit.md`; on gaps, new phase stubs in `milestone-spec.md`.
 
 ## What carries over from the reference ralph loop

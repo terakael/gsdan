@@ -12,6 +12,10 @@ job is to build the minimal slice the ticket asks for — no more (YAGNI on scop
 place your seams exactly where the vision says they go (build with the grain on
 structure). Use `/codebase-design` vocabulary when thinking about where seams go.
 
+Also read the ancestor chain of `AGENTS.md` files for the directories this ticket will
+touch (walk from the target directory up to the repo root, read each one). This is your
+best local context for why the code around you is shaped the way it is.
+
 ## 2. Check for uncommitted changes
 
 If the prior summary has `status: failed` or mentions an escalation, there may be
@@ -20,11 +24,21 @@ understand what was tried. Decide: is the partial work worth keeping and buildin
 or should you reset it (`git stash` or `git checkout -- .`) and start clean? Document
 your choice in the summary you write.
 
-## 3. Write the acceptance tests
+## 3. Write the acceptance tests and intent-why
 
-Turn every acceptance criterion in the ticket into a failing test, written at the
-interface seam named in the ticket's **Interface (test surface)** section. Watch each
-fail for the right reason. Do not write production code yet.
+**Before writing any code**, do two things in the red step:
+
+**a. Intent-why into AGENTS.md.** Run `/write-agents` for each directory the ticket
+will touch. State the intent-why not already covered by the ancestor chain: why this
+seam exists, what it must never do, the constraints from the ticket. "Nothing new at
+this layer" is a valid and correct output — do not restate what ancestors already
+cover. If you cannot state, in a sentence, why the seam exists and what it must never
+do, the interface is unclear — treat that as an escalation signal, exactly like "this
+criterion can't be tested cleanly at the seam."
+
+**b. Failing tests.** Turn every acceptance criterion in the ticket into a failing
+test, written at the interface seam named in the ticket's **Interface (test surface)**
+section. Watch each fail for the right reason. Do not write production code yet.
 
 Test external behaviour at that seam only — not implementation details. If a criterion
 can't be tested cleanly at the seam, stop: the interface is probably the wrong shape.
@@ -33,7 +47,9 @@ That's an escalation (see below).
 ## 4. Test-review gate
 
 Before writing any production code, get the failing tests reviewed by fresh eyes. You
-wrote them, so you're the worst judge of their gaps.
+wrote them, so you're the worst judge of their gaps. The AGENTS.md intent-why should
+also be staged at this point — it goes into the same commit, and a reviewer who sees
+both can flag a mismatch early.
 
 Spawn a reviewer subagent. Give it: this ticket (acceptance criteria, Interface,
 Constraints), the phase-spec's Testing Decisions and Architecture Assertions, the
@@ -64,25 +80,42 @@ Use `/tdd` to make the tests pass — one red-green slice at a time. Add finer-g
 inner tests as needed. Don't skip ahead. The ticket is code-complete when every
 acceptance test and every case the reviewer added is green.
 
-## 6. Code review
+As decisions emerge during implementation — a constraint hit, an approach chosen over
+an alternative that failed, a trade-off that only became visible once the code took
+shape — append the discovered-why to AGENTS.md for the touched directories. Run
+`/write-agents` again with the updated diff if it's easier than editing directly.
 
-When all acceptance criteria are met and tests are green, run `/code-review` against
-the changes since the last commit (use the last commit SHA or `main` as the fixed point,
-whichever is appropriate).
+## 6. Code review and AGENTS fidelity review
 
-The reviewers run a two-axis review (Standards + Spec). For each pass:
+When all acceptance criteria are met and tests are green, run two reviews in parallel:
 
-- If the reviewers find real issues: implement the changes. Tell the same reviewer
-  instances to re-review. Repeat until they are satisfied.
-- If the reviewers find issues you disagree with (they conflict with the ticket or the
-  milestone vision): note the disagreement in the "Key decisions" section of your summary
-  and proceed.
-- If review iterations hit 3 without convergence: treat the whole ticket as failed.
-  No commit. Write a failed summary explaining review did not converge.
+**Code review:** run `/code-review` against the changes since the last commit (use the
+last commit SHA or `main` as the fixed point, whichever is appropriate). Two-axis
+review (Standards + Spec). Handle findings as before.
+
+**AGENTS fidelity review:** spawn a fresh reviewer subagent. Give it: the code diff
+and the AGENTS.md files for every directory this ticket touched. Have it check:
+
+- Does the code actually do what the why claims?
+- Is there a decision visible in the diff that the why doesn't explain?
+- Is any stated rationale invented or contradicted by the code?
+
+This is a green-side fresh-eyes check, complementing the test-review gate's red-side
+check. Record the outcome — `pass`, `fail`, or `pass-with-notes` — for the
+done-summary attestation.
+
+For both reviews:
+
+- If real issues are found: fix them. Ask the same reviewer to re-review. Repeat until
+  satisfied.
+- If you disagree with a finding (it conflicts with the ticket or milestone vision):
+  note the disagreement in the summary's Key decisions section and proceed.
+- If review iterations hit 3 without convergence: treat the ticket as failed.
+  No commit. Write a failed summary.
 
 ## 7. On success
 
-Commit with:
+Commit tests, code, and AGENTS.md together:
 
 ```
 feat(<ticket-slug>): <short description of what was built>
@@ -90,10 +123,19 @@ feat(<ticket-slug>): <short description of what was built>
 
 Example: `feat(02-auth-middleware): add JWT validation at the HTTP seam`
 
+All three go in the same commit. Spec and code are one artifact.
+
 Then write `.flow/phases/<phase>/summaries/<ticket-slug>.md`:
 
 ```
 status: done
+
+Module zone: <pure | shell | port>
+Allowed dependencies: <values only | ports only | external system>
+Forbidden move: <from the interface spec>
+Pure boundary intact: <yes — evidence: ... | N/A - pure core>
+
+AGENTS fidelity review: <pass | fail | pass-with-notes> — <brief finding or reviewer id>
 
 ## What was built
 <one or two sentences: what the ticket delivered>

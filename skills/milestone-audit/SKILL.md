@@ -37,7 +37,7 @@ Read every summary across every phase. The milestone-level view is the point.
 
 ## Steps
 
-Steps 1, 2, and 3 are independent — run them in parallel as subagents to keep context
+Steps 1, 2, 3, and 4 are independent — run them in parallel as subagents to keep context
 windows manageable.
 
 ### 1. Runtime integration
@@ -86,9 +86,30 @@ improvements are not serious findings.
 
 **Done when:** every module area has been reviewed and all serious findings are recorded.
 
-### 4. Gap analysis
+### 4. AGENTS.md chain coherence
 
-Gather findings from all three checks. For each finding, apply the **destination test**:
+Check the whole AGENTS.md ancestor chain is coherent and non-redundant across the
+milestone's directory tree.
+
+Spawn a reviewer subagent. Give it: all AGENTS.md files in the repo (walking the full
+tree), the milestone-spec (module interfaces and architectural intent), and the
+ARTIFACT-CONTRACT.md sharp rule. Have it check:
+
+- **Completeness:** does every module or component directory that has code from this
+  milestone have an AGENTS.md? Missing files are candidates for step 5.
+- **Non-redundancy:** is any why-content repeated verbatim across layers? Content in a
+  child that is already fully stated in a parent should be flagged.
+- **Accuracy:** does the stated why for each layer match the code that landed? Rationale
+  that was superseded by late-phase decisions and never updated is a gap.
+- **Coherence:** does the chain tell a consistent story from root to leaf? An intent
+  stated in a parent that contradicts a decision documented in a child is a conflict.
+
+**Done when:** the reviewer has checked the full tree and returned a verdict (clean /
+gaps-found) with specific gaps listed.
+
+### 5. Gap analysis
+
+Gather findings from all four checks. For each finding, apply the **destination test**:
 
 > Does this gap mean the milestone has not delivered what its problem statement,
 > solution, and user stories say it should deliver?
@@ -98,12 +119,17 @@ Gather findings from all three checks. For each finding, apply the **destination
 | Yes — breaks the milestone's requirements | Add a gap-closure phase to `milestone-spec.md`. Shipping waits. |
 | No — quality nit or future improvement | Note it in the audit doc. Non-blocking. |
 
+For AGENTS.md gaps specifically: a missing or stale AGENTS.md is non-blocking unless it
+reflects a genuine coherence gap in the architecture (a decision that was never recorded
+and leaves the code ambiguous). Missing docs without architectural ambiguity go in the
+audit as a non-blocking note.
+
 The same "concrete gap, not speculation" discipline applies. If you would need to build
 something to confirm the gap exists, it is a downstream concern, not a blocker.
 
 **Done when:** every finding has a verdict and gap phases are written for all blockers.
 
-### 5. Write `milestone-audit.md`
+### 6. Write `milestone-audit.md`
 
 Write `.flow/milestone-audit.md` using the format below. Each re-audit run overwrites
 the previous one — the latest is the current truth; git history preserves the trail.
@@ -111,7 +137,7 @@ the previous one — the latest is the current truth; git history preserves the 
 **Done when:** the audit document is written and its Status field matches the actual
 outcome (clean or gaps-found).
 
-### 6. Update STATE.md
+### 7. Update STATE.md
 
 **Gaps found:**
 - Gap phases are already in `milestone-spec.md` (added in step 4).
@@ -165,10 +191,14 @@ clean → ready to ship
 <Cross-phase consistency and interface conformance findings, organised by area.
 For each serious finding: what it is, which phases it spans, whether it blocks shipping.>
 
+## AGENTS.md chain
+<Coherence verdict: clean | gaps-found. List any missing, stale, redundant, or
+conflicting AGENTS.md content found across the tree. Note whether each is blocking.>
+
 ## Gap list
 | Gap | Type | Affects | Gap phase added |
 |---|---|---|---|
-| <description> | integration / coverage / code-quality | <phases/stories> | NN-<gap-phase> |
+| <description> | integration / coverage / code-quality / agents-docs | <phases/stories> | NN-<gap-phase> |
 
 Empty when clean.
 ```
@@ -176,7 +206,7 @@ Empty when clean.
 ## Reads / Writes
 
 **Reads:** milestone-spec.md, all phase-specs, all summaries across all phases,
-CONTEXT.md, ADRs.
+CONTEXT.md, ADRs, all AGENTS.md files in the repo tree.
 
 **Writes:**
 
