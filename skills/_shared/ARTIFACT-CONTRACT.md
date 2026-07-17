@@ -172,7 +172,7 @@ The durable-why layer. AGENTS.md files live in the codebase itself, next to the 
 - `task-reorient` does a light sweep after each ticket to confirm leaf AGENTS.md landed.
 - `milestone-audit` checks the whole ancestor chain for coherence and non-redundancy across the tree.
 
-See `AGENTS-WRITING-STANDARDS.md` for format rules, layer specificity filters, and the redundancy discipline.
+See `write-agents/AGENTS-WRITING-STANDARDS.md` for format rules, layer specificity filters, and the redundancy discipline.
 
 ## Who touches what
 

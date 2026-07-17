@@ -203,7 +203,23 @@ Add as relevant:
 
 ## Ticket format
 
-Each ticket at `.flow/phases/NN-<name>/tickets/NN-<slug>.md`:
+Each ticket at `.flow/phases/NN-<name>/tickets/NN-<slug>.md` must start with YAML
+frontmatter so the implement loop can parse blocking edges without guessing at prose
+formatting:
+
+```markdown
+---
+slug: NN-<slug>
+blocks:
+  - NN-<blocking-slug>
+  - NN-<another-blocking-slug>
+---
+```
+
+Use `blocks: []` when there are no blocking edges. The `blocks` list contains plain
+slugs only — no backticks, no descriptions. Descriptions belong in the prose body.
+
+The full ticket body follows the frontmatter:
 
 ```markdown
 # NN-<slug>

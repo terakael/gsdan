@@ -3,7 +3,7 @@ name: write-agents
 description: "Create or update an AGENTS.md file for a target directory by reading flow artifacts and the code diff. Shared by the implementer (leaf layers) and phase-reorient (higher layers)."
 ---
 
-Create or update an AGENTS.md file for a target directory. Sources the why from `.flow/` artifacts and the code diff — no human interview. Applies the layer specificity, redundancy, and token minimization rules from `AGENTS-WRITING-STANDARDS.md`.
+Create or update an AGENTS.md file for a target directory. Sources the why from `.flow/` artifacts and the code diff — no human interview. Applies the layer specificity, redundancy, and token minimization rules from `AGENTS-WRITING-STANDARDS.md` (co-located in this skill's directory).
 
 ## Instructions
 
@@ -11,7 +11,7 @@ Create or update an AGENTS.md file for a target directory. Sources the why from 
 
 1. **Resolve target directory.** Use the argument if provided. Otherwise use the directory most directly touched by the current ticket.
 
-2. **Read writing standards.** Read `AGENTS-WRITING-STANDARDS.md` at the repo root. Apply it to all output produced by this skill.
+2. **Read writing standards.** Read `AGENTS-WRITING-STANDARDS.md` — it lives in this skill's directory alongside `SKILL.md`. Apply it to all output produced by this skill.
 
 3. **Detect layer** from position in the repo:
 

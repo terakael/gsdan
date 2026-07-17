@@ -125,6 +125,21 @@ Example: `feat(02-auth-middleware): add JWT validation at the HTTP seam`
 
 All three go in the same commit. Spec and code are one artifact.
 
+If this phase-reorient step produces new tickets (fix-up or follow-on work), each new
+ticket file **must start with YAML frontmatter** so the implement loop can parse it:
+
+```markdown
+---
+slug: <ticket-slug>
+blocks:
+  - <blocking-slug>
+  - <another-blocking-slug>
+---
+```
+
+Use `blocks: []` when there are no blocking edges. The `blocks` list contains plain
+slugs only — no backticks, no descriptions. Descriptions belong in the prose body.
+
 Then write `.flow/phases/<phase>/summaries/<ticket-slug>.md`:
 
 ```

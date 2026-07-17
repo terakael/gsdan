@@ -66,17 +66,17 @@ Ask yourself: **what did the just-completed ticket's concrete outcome reveal abo
 **Triggers to update a ticket:**
 
 - Acceptance criteria or constraints that are now wrong given what actually landed.
-- A blocking edge that was missed or one that no longer applies. Blocking edges are load-bearing - the frontier computation depends on them being correct (see ARTIFACT-CONTRACT.md).
+- A blocking edge that was missed or one that no longer applies. Blocking edges are load-bearing - the frontier computation depends on them being correct (see `../_shared/ARTIFACT-CONTRACT.md`).
 - A ticket that is now fully redundant, or that needs splitting to stay coherent.
 
 When you rewrite, update the ticket file in place. For splits: add new tickets with the
 next available prefix and correct blocking edges. Existing prefixes stay as-is - the
-loop uses the frontier rule (ARTIFACT-CONTRACT.md), not prefix order.
+loop uses the frontier rule (`../_shared/ARTIFACT-CONTRACT.md`), not prefix order.
 
 **When rewriting or splitting a ticket**, carry all fields through to every resulting
-ticket (see ticket format in ARTIFACT-CONTRACT.md). For splits: assign the next
+ticket (see ticket format in `../_shared/ARTIFACT-CONTRACT.md`). For splits: assign the next
 available prefix and set correct blocking edges. Existing prefixes stay as-is - the
-loop uses the frontier rule (ARTIFACT-CONTRACT.md), not prefix order.
+loop uses the frontier rule (`../_shared/ARTIFACT-CONTRACT.md`), not prefix order.
 
 **Triggers to update phase-spec.md:**
 
@@ -101,7 +101,7 @@ No typed zone fields → skip.
 
 ### 6. Update STATE.md
 
-Compute the next runnable ticket using the frontier rule from ARTIFACT-CONTRACT.md: runnable = no done-summary AND all blocking-edge slugs have done-summaries; pick the lowest-prefix one.
+Compute the next runnable ticket using the frontier rule from `../_shared/ARTIFACT-CONTRACT.md`: runnable = no done-summary AND all blocking-edge slugs have done-summaries; pick the lowest-prefix one.
 
 Write STATE.md:
 

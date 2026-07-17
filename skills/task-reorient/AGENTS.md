@@ -16,4 +16,4 @@ Post-ticket sweep. Runs after every completed ticket, before the next one starts
 ## Constraints
 
 - Reacts only to concrete outcome from the just-completed ticket. Not to what might be affected, not to speculative improvements, not to different possible sequencing. The "concrete outcome" bar prevents task-reorient from expanding scope mid-phase.
-- Blocking edges in tickets are load-bearing: the frontier computation in `ARTIFACT-CONTRACT.md` depends on them being correct. A missed or incorrect blocking edge produces wrong ticket ordering, not just a sequencing preference.
+- Blocking edges in tickets are load-bearing: the frontier computation in `../_shared/ARTIFACT-CONTRACT.md` depends on them being correct. A missed or incorrect blocking edge produces wrong ticket ordering, not just a sequencing preference.

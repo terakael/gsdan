@@ -58,12 +58,21 @@ has_done_summary() {
 }
 
 # Print blocking-edge slugs from a ticket file.
-# Expects a "## Blocking Edges" section with "- slug" list items.
+# Reads the `blocks:` list from YAML frontmatter (between the opening and
+# closing `---` delimiters). Each item must be a plain slug on its own line:
+#
+#   blocks:
+#     - 01-some-ticket
+#     - 02-another-ticket
+#
+# Returns nothing for `blocks: []` or a missing blocks key.
 blocking_edges() {
   awk '
-    /^## Blocking[- ][Ee]dges/ { in_s=1; next }
-    in_s && /^##/ { in_s=0 }
-    in_s && /^ *- / { sub(/^ *- /, ""); print }
+    /^---$/ && !in_front { in_front=1; next }
+    /^---$/ && in_front  { exit }
+    in_front && /^blocks:/ { in_blocks=1; next }
+    in_front && in_blocks && /^  - / { sub(/^  - /, ""); print; next }
+    in_front && in_blocks && /^[^ ]/ { in_blocks=0 }
   ' "$1"
 }
 

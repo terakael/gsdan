@@ -66,7 +66,7 @@ definition in phase-spec.md and ask:
 **If yes - gap breaks the done-definition:**
 
 - Add one or more fix-up tickets to `.flow/phases/<phase>/tickets/` with correct
-  blocking edges, using the full ticket format from ARTIFACT-CONTRACT.md.
+  blocking edges, using the full ticket format from `../_shared/ARTIFACT-CONTRACT.md`.
 - Add them and stop. Leave milestone-spec.md and STATE.md untouched.
 - The loop re-globs, implements the fix-up tickets, and invokes you again.
 

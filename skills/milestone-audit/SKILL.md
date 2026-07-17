@@ -93,7 +93,7 @@ milestone's directory tree.
 
 Spawn a reviewer subagent. Give it: all AGENTS.md files in the repo (walking the full
 tree), the milestone-spec (module interfaces and architectural intent), and the
-ARTIFACT-CONTRACT.md sharp rule. Have it check:
+`../_shared/ARTIFACT-CONTRACT.md` sharp rule. Have it check:
 
 - **Completeness:** does every module or component directory that has code from this
   milestone have an AGENTS.md? Missing files are candidates for step 5.
